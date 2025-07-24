@@ -1,0 +1,21 @@
+/* Define CSS variables for your color palette */
+:root {
+  --color-background-light: #FFFDF6;
+  --color-background-soft: #FAF6E9;
+  --color-accent: #DDEB9D;
+  --color-primary: #A0C878;
+  --font-body: 'Inter', sans-serif;
+  --font-heading: 'Poppins', sans-serif;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--color-background-light);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
