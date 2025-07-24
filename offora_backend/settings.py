@@ -150,5 +150,5 @@ RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRE')
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    # e.g., "https://your-frontend-app.onrender.com"
+    "https://offora-backend.onrender.com"
 ]
