@@ -1,19 +1,82 @@
 // In frontend/src/components/VendorRegistrationForm.js
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 // Import all necessary icons
 import { FaUser, FaEnvelope, FaLock, FaStore, FaMapMarkerAlt } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import API_URL from '../apiConfig';
+
+// --- Password Strength Meter Component ---
+const PasswordStrengthMeter = ({ password }) => {
+    const [strength, setStrength] = useState({ score: 0, label: '', color: '' });
+
+    useEffect(() => {
+        let score = 0;
+        let suggestions = [];
+
+        if (password.length >= 8) score++;
+        else suggestions.push("8+ characters");
+
+        if (/[A-Z]/.test(password)) score++;
+        else suggestions.push("uppercase letter");
+
+        if (/[a-z]/.test(password)) score++;
+        else suggestions.push("lowercase letter");
+        
+        if (/[0-9]/.test(password)) score++;
+        else suggestions.push("number");
+
+        if (/[^A-Za-z0-9]/.test(password)) score++;
+        else suggestions.push("special character");
+
+        let label = 'Weak';
+        let color = '#ef4444'; // Red
+
+        if (score >= 5) {
+            label = 'Very Strong';
+            color = '#22c55e'; // Green
+        } else if (score >= 4) {
+            label = 'Strong';
+            color = '#84cc16'; // Lime
+        } else if (score >= 3) {
+            label = 'Medium';
+            color = '#f59e0b'; // Amber
+        }
+        
+        setStrength({ score, label, color, suggestions });
+
+    }, [password]);
+
+    if (!password) return null;
+
+    return (
+        <div style={styles.strengthContainer}>
+            <div style={styles.strengthBarBackground}>
+                <div style={{...styles.strengthBar, width: `${strength.score * 20}%`, backgroundColor: strength.color }}></div>
+            </div>
+            <div style={styles.strengthText}>
+                <span>Password Strength: <strong>{strength.label}</strong></span>
+                {strength.score < 5 && 
+                    <span style={{fontSize: '0.75rem', color: '#6b7280'}}>
+                        Suggestions: {strength.suggestions.join(', ')}
+                    </span>
+                }
+            </div>
+        </div>
+    );
+};
+
+
 function VendorRegistrationForm() {
     const [formData, setFormData] = useState({
         username: '',
         email: '',
         password: '',
+        confirmPassword: '', // New field
         store: {
             name: '',
-            category: 'FOOD', // Default category
+            category: 'FOOD',
             address: '',
         },
     });
@@ -32,19 +95,30 @@ function VendorRegistrationForm() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        // --- Password validation ---
+        if (formData.password !== formData.confirmPassword) {
+            setError("Passwords do not match.");
+            return;
+        }
+
         setLoading(true);
         setError('');
         setSuccess('');
+
+        // Exclude confirmPassword from the data sent to the backend
+        const { confirmPassword, ...dataToSend } = formData;
+
         try {
-            await axios.post(`${API_URL}/api/vendor/register/`, formData);
-            setSuccess('Registration successful! Your store is pending admin approval. You can now log in.');
+            await axios.post(`${API_URL}/api/vendor/register/`, dataToSend);
+            setSuccess('Registration successful! You can now log in.');
         } catch (err) {
-            const errorData = err.response.data;
-            const errorMessage = Object.keys(errorData).map(key =>
-                `${key}: ${typeof errorData[key] === 'object' ? JSON.stringify(errorData[key]) : errorData[key]}`
-            ).join('; ');
-            setError(errorMessage || 'Registration failed. Please check your details.');
-            console.error(err.response.data);
+            const errorData = err.response?.data;
+            const errorMessage = errorData ? Object.keys(errorData).map(key =>
+                `${key}: ${Array.isArray(errorData[key]) ? errorData[key].join(', ') : errorData[key]}`
+            ).join('; ') : 'Registration failed. Please check your details.';
+            setError(errorMessage);
+            console.error(err.response?.data);
         } finally {
             setLoading(false);
         }
@@ -59,7 +133,13 @@ function VendorRegistrationForm() {
                 {/* User Details */}
                 <div style={styles.inputContainer}><FaUser style={styles.icon} /><input name="username" onChange={handleChange} placeholder="Your Username" required style={styles.input} /></div>
                 <div style={styles.inputContainer}><FaEnvelope style={styles.icon} /><input type="email" name="email" onChange={handleChange} placeholder="Your Email" required style={styles.input} /></div>
-                <div style={styles.inputContainer}><FaLock style={styles.icon} /><input type="password" name="password" onChange={handleChange} placeholder="Password" required style={styles.input} /></div>
+                <div style={styles.inputContainer}><FaLock style={styles.icon} /><input type="password" name="password" value={formData.password} onChange={handleChange} placeholder="Password" required style={styles.input} /></div>
+                
+                {/* Password Strength Meter */}
+                <PasswordStrengthMeter password={formData.password} />
+
+                {/* Confirm Password Field */}
+                <div style={styles.inputContainer}><FaLock style={styles.icon} /><input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} placeholder="Confirm Password" required style={styles.input} /></div>
 
                 <hr style={styles.hr} />
 
@@ -86,7 +166,6 @@ function VendorRegistrationForm() {
     );
 }
 
-// Using the same professional styles from our other forms
 const styles = {
     formContainer: {
         display: 'flex',
@@ -135,6 +214,11 @@ const styles = {
     successMessage: { color: '#388E3C', backgroundColor: 'rgba(56, 142, 60, 0.1)', padding: '10px', borderRadius: '8px', textAlign: 'center', fontSize: '14px', margin: '10px 0' },
     toggleText: { marginTop: '20px', fontFamily: 'var(--font-body)', color: '#555' },
     toggleLink: { color: '#A0C878', fontWeight: 'bold', cursor: 'pointer', textDecoration: 'none' },
+    // Styles for Password Strength Meter
+    strengthContainer: { marginTop: '-10px', marginBottom: '20px' },
+    strengthBarBackground: { height: '8px', width: '100%', backgroundColor: '#e5e7eb', borderRadius: '4px' },
+    strengthBar: { height: '100%', borderRadius: '4px', transition: 'width 0.3s ease-in-out' },
+    strengthText: { display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '0.8rem', color: '#4b5563' },
 };
 
 

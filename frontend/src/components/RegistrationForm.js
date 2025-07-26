@@ -1,19 +1,76 @@
 // In frontend/src/components/RegistrationForm.js
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 // Import icons for a better UI
 import { FaUser, FaEnvelope, FaLock } from 'react-icons/fa';
 import API_URL from '../apiConfig';
+
+// --- Password Strength Meter Component ---
+const PasswordStrengthMeter = ({ password }) => {
+    const [strength, setStrength] = useState({ score: 0, label: '', color: '', suggestions: [] });
+
+    useEffect(() => {
+        let score = 0;
+        let suggestions = [];
+
+        if (!password) {
+            setStrength({ score: 0, label: '', color: '', suggestions: [] });
+            return;
+        }
+
+        if (password.length >= 8) score++; else suggestions.push("8+ characters");
+        if (/[A-Z]/.test(password)) score++; else suggestions.push("uppercase letter");
+        if (/[a-z]/.test(password)) score++; else suggestions.push("lowercase letter");
+        if (/[0-9]/.test(password)) score++; else suggestions.push("number");
+        if (/[^A-Za-z0-9]/.test(password)) score++; else suggestions.push("special character");
+
+        let label = 'Weak';
+        let color = '#ef4444'; // Red
+
+        if (score >= 5) {
+            label = 'Very Strong';
+            color = '#22c55e'; // Green
+        } else if (score >= 4) {
+            label = 'Strong';
+            color = '#84cc16'; // Lime
+        } else if (score >= 3) {
+            label = 'Medium';
+            color = '#f59e0b'; // Amber
+        }
+        
+        setStrength({ score, label, color, suggestions });
+
+    }, [password]);
+
+    if (!password) return null;
+
+    return (
+        <div style={styles.strengthContainer}>
+            <div style={styles.strengthBarBackground}>
+                <div style={{...styles.strengthBar, width: `${strength.score * 20}%`, backgroundColor: strength.color }}></div>
+            </div>
+            <div style={styles.strengthText}>
+                <span>Strength: <strong>{strength.label}</strong></span>
+                {strength.score < 5 && strength.suggestions.length > 0 &&
+                    <span style={{fontSize: '0.75rem', color: '#6b7280'}}>
+                        Add: {strength.suggestions.join(', ')}
+                    </span>
+                }
+            </div>
+        </div>
+    );
+};
+
+
 function RegistrationForm() {
-    // State to hold the form input data
     const [formData, setFormData] = useState({
         username: '',
         email: '',
         password: '',
+        confirmPassword: '', // New field for confirmation
     });
 
-    // New state variables for loading and feedback messages
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -27,25 +84,27 @@ function RegistrationForm() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        // 1. Reset states and start loading indicator
-        setLoading(true);
         setError('');
         setSuccess('');
 
-        try {
-            const response = await axios.post(`${API_URL}/api/register/`, formData);
-            // 2. Handle success
-            setSuccess('Registration successful! You can now log in.');
-            console.log('Registration successful:', response.data);
-            // Clear form on success
-            setFormData({ username: '', email: '', password: '' });
+        // 1. Check if passwords match
+        if (formData.password !== formData.confirmPassword) {
+            setError('Passwords do not match. Please try again.');
+            return;
+        }
 
+        setLoading(true);
+
+        // Exclude confirmPassword from the data sent to the backend
+        const { confirmPassword, ...dataToSend } = formData;
+
+        try {
+            const response = await axios.post(`${API_URL}/api/register/`, dataToSend);
+            setSuccess('Registration successful! You can now log in.');
+            setFormData({ username: '', email: '', password: '', confirmPassword: '' }); // Clear form
         } catch (err) {
-            // 3. Handle errors
             console.error('Registration failed:', err.response);
             if (err.response && err.response.data) {
-                // Extract error message from Django backend
-                // This could be for a username that already exists, an invalid email, etc.
                 const errorData = err.response.data;
                 const errorMessage = Object.keys(errorData).map(key =>
                     `${key}: ${errorData[key].join(', ')}`
@@ -55,7 +114,6 @@ function RegistrationForm() {
                 setError('An unexpected error occurred. Please try again.');
             }
         } finally {
-            // 4. Stop loading indicator regardless of outcome
             setLoading(false);
         }
     };
@@ -65,53 +123,33 @@ function RegistrationForm() {
             <form onSubmit={handleSubmit} style={styles.form}>
                 <h2 style={styles.title}>Create Your Account</h2>
 
-                {/* --- Input for Username --- */}
                 <div style={styles.inputContainer}>
                     <FaUser style={styles.icon} />
-                    <input
-                        type="text"
-                        name="username"
-                        value={formData.username}
-                        onChange={handleChange}
-                        placeholder="Username"
-                        required
-                        style={styles.input}
-                    />
+                    <input type="text" name="username" value={formData.username} onChange={handleChange} placeholder="Username" required style={styles.input} />
                 </div>
 
-                {/* --- Input for Email --- */}
                 <div style={styles.inputContainer}>
                     <FaEnvelope style={styles.icon} />
-                    <input
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        placeholder="Email Address"
-                        required
-                        style={styles.input}
-                    />
+                    <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Email Address" required style={styles.input} />
                 </div>
 
-                {/* --- Input for Password --- */}
                 <div style={styles.inputContainer}>
                     <FaLock style={styles.icon} />
-                    <input
-                        type="password"
-                        name="password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        placeholder="Password"
-                        required
-                        style={styles.input}
-                    />
+                    <input type="password" name="password" value={formData.password} onChange={handleChange} placeholder="Password" required style={styles.input} />
+                </div>
+                
+                {/* Password Strength Meter */}
+                <PasswordStrengthMeter password={formData.password} />
+
+                {/* Confirm Password Field */}
+                <div style={styles.inputContainer}>
+                    <FaLock style={styles.icon} />
+                    <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} placeholder="Confirm Password" required style={styles.input} />
                 </div>
 
-                {/* --- Inline Feedback Messages --- */}
                 {error && <p style={styles.errorMessage}>{error}</p>}
                 {success && <p style={styles.successMessage}>{success}</p>}
 
-                {/* --- Submit Button with Loading State --- */}
                 <button type="submit" style={styles.button} disabled={loading}>
                     {loading ? 'Registering...' : 'Create Account'}
                 </button>
@@ -120,8 +158,6 @@ function RegistrationForm() {
     );
 }
 
-
-// --- A more "top-notch" styling object ---
 const styles = {
     container: {
         display: 'flex',
@@ -159,8 +195,8 @@ const styles = {
     },
     input: {
         width: '100%',
-        padding: '12px 12px 12px 45px', // Left padding for icon
-        boxSizing: 'border-box', // Important for padding and width calculation
+        padding: '12px 12px 12px 45px',
+        boxSizing: 'border-box',
         borderRadius: '8px',
         border: '1px solid #ddd',
         fontFamily: 'var(--font-body)',
@@ -181,7 +217,7 @@ const styles = {
         marginTop: '10px',
     },
     errorMessage: {
-        color: '#D32F2F', // A standard error red
+        color: '#D32F2F',
         backgroundColor: 'rgba(211, 47, 47, 0.1)',
         padding: '10px',
         borderRadius: '8px',
@@ -190,7 +226,7 @@ const styles = {
         marginBottom: '20px',
     },
     successMessage: {
-        color: '#388E3C', // A standard success green
+        color: '#388E3C',
         backgroundColor: 'rgba(56, 142, 60, 0.1)',
         padding: '10px',
         borderRadius: '8px',
@@ -198,6 +234,11 @@ const styles = {
         fontSize: '14px',
         marginBottom: '20px',
     },
+    // Styles for Password Strength Meter
+    strengthContainer: { marginTop: '-15px', marginBottom: '20px' },
+    strengthBarBackground: { height: '8px', width: '100%', backgroundColor: '#e5e7eb', borderRadius: '4px' },
+    strengthBar: { height: '100%', borderRadius: '4px', transition: 'width 0.3s ease-in-out, background-color 0.3s ease-in-out' },
+    strengthText: { display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '0.8rem', color: '#4b5563' },
 };
 
 export default RegistrationForm;
