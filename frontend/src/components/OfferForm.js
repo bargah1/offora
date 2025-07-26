@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
+import API_URL from '../apiConfig'; 
 
 function OfferForm({ onComplete, existingOffer, onCancel }) {
     const { authTokens } = useContext(AuthContext);
@@ -91,8 +92,8 @@ function OfferForm({ onComplete, existingOffer, onCancel }) {
         if (image) data.append('image', image);
         
         const url = isEditMode
-            ? `http://127.0.0.1:8000/api/vendor/offers/${existingOffer.id}/update/`
-            : 'http://127.0.0.1:8000/api/vendor/offers/create/';
+    ? `${API_URL}/api/vendor/offers/${existingOffer.id}/update/`
+    : `${API_URL}/api/vendor/offers/create/`;
         
         const method = isEditMode ? 'patch' : 'post';
 

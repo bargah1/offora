@@ -20,7 +20,7 @@ function LoginForm({ onLoginSuccess }) {
     setError('');
 
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/login/', formData);
+      const response = await axios.post(`${API_URL}/api/login/`, formData);
       onLoginSuccess(response.data);
     } catch (err) {
       console.error('Login failed:', err.response);

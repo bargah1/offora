@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 // Import icons for a better UI
 import { FaUser, FaEnvelope, FaLock } from 'react-icons/fa';
-
+import API_URL from '../apiConfig';
 function RegistrationForm() {
     // State to hold the form input data
     const [formData, setFormData] = useState({
@@ -33,7 +33,7 @@ function RegistrationForm() {
         setSuccess('');
 
         try {
-            const response = await axios.post('http://127.0.0.1:8000/api/register/', formData);
+            const response = await axios.post(`${API_URL}/api/register/`, formData);
             // 2. Handle success
             setSuccess('Registration successful! You can now log in.');
             console.log('Registration successful:', response.data);

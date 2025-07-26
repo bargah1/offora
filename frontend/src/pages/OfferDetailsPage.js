@@ -2,7 +2,7 @@ import React, { useEffect, useState, useContext } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
-
+import API_URL from '../apiConfig';
 // Helper components for icons
 const ChevronLeft = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>;
 const Heart = ({ isFavorited }) => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill={isFavorited ? '#ef4444' : 'none'} stroke={isFavorited ? '#ef4444' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>;
@@ -34,7 +34,7 @@ export default function OfferDetailsPage() {
             if (!id || !authTokens?.access) return;
             setLoading(true);
             try {
-                const offerRes = await axios.get(`http://127.0.0.1:8000/api/offers/${id}/`, {
+                const offerRes = await axios.get(`${API_URL}/api/offers/${id}/`, {
                     headers: { Authorization: `Bearer ${authTokens.access}` }
                 });
                 const currentOffer = offerRes.data;
@@ -42,14 +42,14 @@ export default function OfferDetailsPage() {
                 setIsFavorited(currentOffer.is_favorited);
 
                 if (currentOffer.store) {
-                    const shopOffersRes = await axios.get(`http://127.0.0.1:8000/api/offers/`, {
+                    const shopOffersRes = await axios.get(`${API_URL}/api/offers/`, {
                         headers: { Authorization: `Bearer ${authTokens.access}` },
                         params: { store: currentOffer.store }
                     });
                     setShopOffers(shopOffersRes.data.results.filter(o => o.id !== parseInt(id)).slice(0, 2));
                 }
 
-                const reviewsRes = await axios.get(`http://127.0.0.1:8000/api/offers/${id}/reviews/`, {
+                const reviewsRes = await axios.get(`${API_URL}/api/offers/${id}/reviews/`, {
                     headers: { Authorization: `Bearer ${authTokens.access}` }
                 });
                 setReviews(Array.isArray(reviewsRes.data.results) ? reviewsRes.data.results : (Array.isArray(reviewsRes.data) ? reviewsRes.data : []));
@@ -67,7 +67,7 @@ export default function OfferDetailsPage() {
         e.preventDefault();
         setSubmitting(true);
         try {
-            const response = await axios.post(`http://127.0.0.1:8000/api/offers/${id}/reviews/`, {
+            const response = await axios.post(`${API_URL}/api/offers/${id}/reviews/`, {
                 rating: reviewRating,
                 comment: reviewText
             }, {
@@ -86,7 +86,7 @@ export default function OfferDetailsPage() {
 
     const handleFavorite = async () => {
         try {
-            await axios.post(`http://127.0.0.1:8000/api/offers/${id}/favorite/`, {}, {
+            await axios.post(`${API_URL}/api/offers/${id}/favorite/`, {}, {
                 headers: { Authorization: `Bearer ${authTokens.access}` }
             });
             setIsFavorited(prev => !prev);

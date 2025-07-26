@@ -3,7 +3,7 @@ import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import ShopCard from '../components/ShopCard';
 import OfferCard from '../components/OfferCard';
-
+import API_URL from '../apiConfig';
 // Helper components for icons
 const SearchIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>;
 const MapPinIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>;
@@ -46,8 +46,8 @@ export default function HomePage() {
             if (activeTab === 'favorites') {
                 try {
                     const [favOffersRes, favShopsRes] = await Promise.all([
-                        axios.get('http://127.0.0.1:8000/api/favorites/', { headers }),
-                        axios.get('http://127.0.0.1:8000/api/favorite-shops/', { headers })
+                        axios.get(`${API_URL}/api/favorites/`, { headers }),
+                        axios.get(`${API_URL}/api/favorite-shops/`, { headers })
                     ]);
                     setOffers(favOffersRes.data.results || favOffersRes.data || []);
                     setFavoriteShops(favShopsRes.data.results || favShopsRes.data || []);
@@ -57,7 +57,7 @@ export default function HomePage() {
                     setLoading(false);
                 }
             } else {
-                let url = activeTab === 'shops' ? 'http://127.0.0.1:8000/api/stores/' : 'http://127.0.0.1:8000/api/offers/';
+                let url = activeTab === 'shops' ? `${API_URL}/api/stores/`: `${API_URL}/api/offers/`;
                 const params = { search: searchQuery };
                 if (selectedCategory !== "All") {
                     if (activeTab === 'shops') {
@@ -99,7 +99,7 @@ export default function HomePage() {
 
     const handleFavoriteToggle = async (offerId, shouldFavorite) => {
         try {
-            await axios.post(`http://127.0.0.1:8000/api/offers/${offerId}/favorite/`, {}, {
+            await axios.post(`${API_URL}/api/offers/${offerId}/favorite/`, {}, {
                 headers: { Authorization: `Bearer ${authTokens.access}` }
             });
             setFavoriteOfferIds(prev => {

@@ -5,7 +5,7 @@ import axios from 'axios';
 // Import all necessary icons
 import { FaUser, FaEnvelope, FaLock, FaStore, FaMapMarkerAlt } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
-
+import API_URL from '../apiConfig';
 function VendorRegistrationForm() {
     const [formData, setFormData] = useState({
         username: '',
@@ -36,7 +36,7 @@ function VendorRegistrationForm() {
         setError('');
         setSuccess('');
         try {
-            await axios.post('http://127.0.0.1:8000/api/vendor/register/', formData);
+            await axios.post(`${API_URL}/api/vendor/register/`, formData);
             setSuccess('Registration successful! Your store is pending admin approval. You can now log in.');
         } catch (err) {
             const errorData = err.response.data;

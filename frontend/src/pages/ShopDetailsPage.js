@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import { MapPin, Phone, Star, ChevronLeft, Heart, Share2 } from 'lucide-react';
-
+import API_URL from '../apiConfig';
 // Custom hook to get window size for responsive design in JS
 const useWindowSize = () => {
     const [size, setSize] = useState([window.innerWidth, window.innerHeight]);
@@ -79,9 +79,9 @@ export default function ShopDetailsPage() {
             setLoading(true);
             try {
                 const [shopRes, offersRes, reviewsRes] = await Promise.all([
-                    axios.get(`http://127.0.0.1:8000/api/stores/${id}/`, { headers: { Authorization: `Bearer ${authTokens.access}` } }),
-                    axios.get(`http://127.0.0.1:8000/api/offers/?store=${id}`, { headers: { Authorization: `Bearer ${authTokens.access}` } }),
-                    axios.get(`http://127.0.0.1:8000/api/stores/${id}/reviews/`, { headers: { Authorization: `Bearer ${authTokens.access}` } })
+                    axios.get(`${API_URL}/api/stores/${id}/`, { headers: { Authorization: `Bearer ${authTokens.access}` } }),
+                    axios.get(`${API_URL}/api/offers/?store=${id}`, { headers: { Authorization: `Bearer ${authTokens.access}` } }),
+                    axios.get(`${API_URL}/api/stores/${id}/reviews/`, { headers: { Authorization: `Bearer ${authTokens.access}` } })
                 ]);
                 setShop(shopRes.data);
                 setOffers(offersRes.data.results || []);
@@ -100,7 +100,7 @@ export default function ShopDetailsPage() {
     const handleFavoriteToggle = async () => {
         setIsFavorite(!isFavorite);
         try {
-            await axios.post(`http://127.0.0.1:8000/api/stores/${id}/favorite/`, {}, { headers: { Authorization: `Bearer ${authTokens.access}` } });
+            await axios.post(`${API_URL}/api/stores/${id}/favorite/`, {}, { headers: { Authorization: `Bearer ${authTokens.access}` } });
         } catch (err) {
             console.error("Failed to toggle favorite", err);
             setIsFavorite(isFavorite => !isFavorite); // Revert on error

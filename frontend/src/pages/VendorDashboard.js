@@ -4,7 +4,7 @@ import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
 import VendorOfferCard from "../components/VendorOfferCard";
 import OfferForm from "../components/OfferForm";
-
+import API_URL from '../apiConfig';
 // --- Sub-component for displaying the profile ---
 const StoreProfileDisplay = ({ storeData, onEditClick }) => {
     const mapLink =
@@ -88,7 +88,7 @@ const StoreProfileEditForm = ({ initialData, onSave, onCancel }) => {
             });
             if (logoFile) data.append("logo", logoFile);
 
-            const response = await axios.patch('http://127.0.0.1:8000/api/vendor/my-store/update/', data, {
+            const response = await axios.patch(`${API_URL}/api/vendor/my-store/update/`, data, {
                 headers: { 
                     Authorization: `Bearer ${authTokens.access}`,
                     "Content-Type": "multipart/form-data",
@@ -265,9 +265,9 @@ export default function VendorDashboard() {
             }
             try {
                 const [storeRes, shopReviewsRes, offerReviewsRes] = await Promise.all([
-                    axios.get("http://127.0.0.1:8000/api/vendor/my-store/", { headers: { Authorization: `Bearer ${authTokens.access}` } }),
-                    axios.get("http://127.0.0.1:8000/api/vendor/shop-reviews/", { headers: { Authorization: `Bearer ${authTokens.access}` } }),
-                    axios.get("http://127.0.0.1:8000/api/vendor/offer-reviews/", { headers: { Authorization: `Bearer ${authTokens.access}` } })
+                    axios.get(`${API_URL}/api/vendor/my-store/`, { headers: { Authorization: `Bearer ${authTokens.access}` } }),
+                    axios.get(`${API_URL}/api/vendor/shop-reviews/`, { headers: { Authorization: `Bearer ${authTokens.access}` } }),
+                    axios.get(`${API_URL}/api/vendor/offer-reviews/`, { headers: { Authorization: `Bearer ${authTokens.access}` } })
                 ]);
                 setStoreData(storeRes.data);
                 setShopReviews(shopReviewsRes.data.results || []);
@@ -286,7 +286,7 @@ export default function VendorDashboard() {
 
     const handleSubscribe = async () => {
         try {
-            const orderResponse = await axios.post("http://127.0.0.1:8000/api/vendor/subscription/create/", {}, {
+            const orderResponse = await axios.post(`${API_URL}/api/vendor/subscription/create/`, {}, {
                 headers: { Authorization: `Bearer ${authTokens.access}` }
             });
             const orderData = orderResponse.data;
@@ -299,7 +299,7 @@ export default function VendorDashboard() {
                 order_id: orderData.order_id,
                 handler: async function (response) {
                     try {
-                        const verificationResponse = await axios.post("http://127.0.0.1:8000/api/vendor/subscription/verify/", {
+                        const verificationResponse = await axios.post(`${API_URL}/api/vendor/subscription/verify/`, {
                             razorpay_payment_id: response.razorpay_payment_id,
                             razorpay_order_id: response.razorpay_order_id,
                             razorpay_signature: response.razorpay_signature
@@ -338,7 +338,7 @@ export default function VendorDashboard() {
     const handleDelete = async (id) => {
         if (window.confirm("Are you sure you want to delete this offer?")) {
             try {
-                await axios.delete(`http://127.0.0.1:8000/api/vendor/offers/${id}/delete/`, {
+                await axios.delete(`${API_URL}/api/vendor/offers/${id}/delete/`, {
                     headers: { 'Authorization': `Bearer ${authTokens.access}` }
                 });
                 setStoreData(prev => ({
