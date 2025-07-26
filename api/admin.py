@@ -2,7 +2,7 @@
 
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, ShopOwner, StoreProfile, Offer
+from .models import User, ShopOwner, StoreProfile, Offer,Subscription
 
 class ShopOwnerInline(admin.StackedInline):
     model = ShopOwner
@@ -38,7 +38,17 @@ class OfferAdmin(admin.ModelAdmin):
     list_filter = ('is_approved', 'is_active', 'store')
     search_fields = ('title', 'store__name')
 
+class SubscriptionAdmin(admin.ModelAdmin):
+    list_display = ('shop_owner_username', 'is_active', 'start_date', 'end_date')
+    list_filter = ('is_active',)
+    search_fields = ('shop_owner__user__username',)
+
+    @admin.display(description='Shop Owner')
+    def shop_owner_username(self, obj):
+        return obj.shop_owner.user.username
+
 # Register your models
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(StoreProfile, StoreProfileAdmin)
 admin.site.register(Offer, OfferAdmin)
+admin.site.register(Subscription, SubscriptionAdmin)
